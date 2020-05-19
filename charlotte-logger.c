@@ -29,6 +29,7 @@ main(int argc, char **argv)
   }
 
   char tmp[2048];
+  memset(tmp, 0, 2048);
   sprintf(tmp, "%s/done", argv[1]);
 
   if (stat(tmp, &st) == -1) {
@@ -38,12 +39,16 @@ main(int argc, char **argv)
   char str[BUFSIZE];
   FILE *f = NULL;
   char prevfile[256];
-  prevfile[0] = 0;
+  memset(prevfile, 0, 256);
   time_t prevtime = 0;
 
   while (fgets(str, sizeof str, stdin) != NULL) {
     // File handling
     char fname[256], fullname[256], transfername[256], transferfullname[256];
+    memset(fname, 0, 256);
+    memset(fullname, 0, 256),
+    memset(transfername, 0, 256);
+    memset(transferfullname, 0, 256);
     
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
@@ -64,6 +69,7 @@ main(int argc, char **argv)
 	
 	if (fork() == 0) {
           char cmd[2048];
+	  memset(cmd, 0, 2048);
 
 	  // Zip it
           sprintf(cmd, "nice -n 10 gzip %s", transferfullname);

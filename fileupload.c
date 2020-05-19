@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <curl/curl.h>
+#include <string.h>
 #include "hash.h"
 
 //#define SERVER "https://community.nakedsailor.blog/timescaledb"
@@ -29,6 +30,7 @@ int fileupload(char *boatId, char *fullname, char *basename)
   FILE * hd_src;
   struct stat file_info;
   char hash[2048];
+  memset(hash, 0, 2048);
  
   /* get hash for file */
   if (hashfile(fullname, hash) == NULL) {
@@ -38,6 +40,7 @@ int fileupload(char *boatId, char *fullname, char *basename)
   printf("Hash: %s\n", hash);
 
   char realurl[2048];
+  memset(realurl, 0, 2048);
   sprintf(realurl, "%s/boat/%s/chunk?hash=%s&filename=%s", SERVER, boatId, hash, basename);
 
   printf("realurl: %s\n", realurl);
