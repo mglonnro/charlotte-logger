@@ -4,6 +4,7 @@ TARGETS=$(TARGET)
 TARGET=charlotte-logger
 OBJS=charlotte-logger.o fileupload.o hash.o
 LDFLAGS=-lcurl -lcrypto
+CFLAGS=-g
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
