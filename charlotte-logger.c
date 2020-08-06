@@ -8,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h> 
+#include <fcntl.h>
 
 #include "fileupload.h"
 
@@ -15,7 +16,6 @@
 #define PATHSIZE 256
 #define ROTATEINTERVAL 300
 #define ROTATELINES    50000
-//#define ROTATEINTERVAL	10
 
 // Gzip and upload a specific log file
 void process_log(char *fname, char *fname_withpath);
@@ -23,7 +23,7 @@ void process_old();
 void usage(char *bin);
 void housekeeper();
 
-static int verbose_flag, retry_minutes = -1, purge_days = -1;
+static int verbose_flag, retry_minutes = -1, purge_days = -1, json_flag = 0;
 static char logdir[PATHSIZE], upload_to[PATHSIZE];
 static char fname[PATHSIZE], fname_withpath[PATHSIZE];
 
@@ -32,6 +32,8 @@ int main(int argc, char **argv) {
   memset(logdir, 0, PATHSIZE);
   memset(upload_to, 0, PATHSIZE);
 
+  signal(SIGPIPE, SIG_IGN);
+
   while (1) {
     static struct option long_options[] = {
         /* These options set a flag. */
@@ -39,6 +41,7 @@ int main(int argc, char **argv) {
         {"retry", required_argument, 0, 'r'},
         {"purge-done", required_argument, 0, 'p'},
         {"upload-to", required_argument, 0, 'u'},
+	{"json", no_argument, &json_flag, 1},
         {0, 0, 0, 0}};
 
     int option_index = 0;
@@ -97,6 +100,10 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
+  // Make stdout non-blocking for continued logging even if charlotte-client crashes.
+  int flags = fcntl(STDOUT_FILENO, F_GETFL);
+  fcntl(STDOUT_FILENO, F_SETFL, flags | O_NONBLOCK);
+
   struct stat st = {0};
 
   if (stat(logdir, &st) == -1) {
@@ -125,6 +132,8 @@ int main(int argc, char **argv) {
   // Background worker to take care of compressind and (re)sending old files, 
   // as well as purging already sent logs.
   housekeeper();
+
+  int counter = 0;
 
   while (fgets(str, sizeof str, stdin) != NULL) {
     // File handling
@@ -159,9 +168,9 @@ int main(int argc, char **argv) {
 	}
       }
 
-      sprintf(fname, "%s-%d%02d%02d-%02d%02d%02d.log", "nmealog",
+      sprintf(fname, "%s-%d%02d%02d-%02d%02d%02d.%s", "nmealog",
               tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
-              tm.tm_min, tm.tm_sec);
+              tm.tm_min, tm.tm_sec, (json_flag == 1 ? "json.log" : "log") );
       sprintf(fname_withpath, "%s/%s", logdir, fname);
 
       f = fopen(fname_withpath, "a");
@@ -338,6 +347,7 @@ housekeeper() {
 }
 
 void usage(char *bin) {
+  printf("charlotte-logger v0.0.5\n");
   printf("usage: %s [--upload-to boatid] [--purge-done days] [--retry minutes] DIRECTORY\n",
          bin);
   printf("\n");

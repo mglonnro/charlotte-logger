@@ -82,21 +82,35 @@ int fileupload(char *boatId, char *fullname, char *basename) {
                      (curl_off_t)file_info.st_size);
 
     /* Now run off and do what you've been told! */
+    fprintf(stderr, "Starting CURL send.\n");
     res = curl_easy_perform(curl);
+    fprintf(stderr, "Back from CURL send.\n");
     /* Check for errors */
     if (res != CURLE_OK) {
       fprintf(stderr, "curl_easy_perform() failed: %s\n",
               curl_easy_strerror(res));
       retvalue = 1;
     } else {
-      retvalue = 0;
+      fprintf(stderr, "No CURL errors.\n");
+
+      long response_code;
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+      
+      if (response_code != 200) {
+ 	fprintf(stderr, "Response code error: %ld\n", response_code);	
+	retvalue = 1;
+      } else {
+        retvalue = 0;
+      }
     }
 
     /* always cleanup */
     curl_easy_cleanup(curl);
+    fprintf(stderr, "Done curl_easy_cleanup\n");
   } 
   fclose(hd_src); /* close the local file */
 
   curl_global_cleanup();
+  fprintf(stderr, "Done curl_global_clanup\n");
   return retvalue;
 }
