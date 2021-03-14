@@ -13,6 +13,7 @@
 #include "fileupload.h"
 
 #define BUFSIZE 2048
+#define TMP_BUFSIZE (BUFSIZE*3)
 #define PATHSIZE 256
 #define ROTATEINTERVAL 300
 #define ROTATELINES    50000
@@ -39,7 +40,7 @@ int main(int argc, char **argv) {
         /* These options set a flag. */
         {"verbose", no_argument, &verbose_flag, 1},
         {"retry", required_argument, 0, 'r'},
-        {"purge-done", required_argument, 0, 'p'},
+        {"purge-done", required_argument, 0, 'p'}, 
         {"upload-to", required_argument, 0, 'u'},
 	{"json", no_argument, &json_flag, 1},
         {0, 0, 0, 0}};
@@ -110,8 +111,8 @@ int main(int argc, char **argv) {
     mkdir(logdir, 0700);
   }
 
-  char tmp[2048];
-  memset(tmp, 0, 2048);
+  char tmp[TMP_BUFSIZE];
+  memset(tmp, 0, TMP_BUFSIZE);
   sprintf(tmp, "%s/done", logdir);
 
   if (stat(tmp, &st) == -1) {
@@ -132,8 +133,6 @@ int main(int argc, char **argv) {
   // Background worker to take care of compressind and (re)sending old files, 
   // as well as purging already sent logs.
   housekeeper();
-
-  int counter = 0;
 
   while (fgets(str, sizeof str, stdin) != NULL) {
     // File handling
@@ -171,7 +170,8 @@ int main(int argc, char **argv) {
       sprintf(fname, "%s-%d%02d%02d-%02d%02d%02d.%s", "nmealog",
               tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
               tm.tm_min, tm.tm_sec, (json_flag == 1 ? "json.log" : "log") );
-      sprintf(fname_withpath, "%s/%s", logdir, fname);
+      sprintf(tmp, "%s/%s", logdir, fname);
+      strncpy(fname_withpath, tmp, PATHSIZE);
 
       f = fopen(fname_withpath, "a");
       if (!f) {
@@ -202,6 +202,9 @@ int main(int argc, char **argv) {
 
 // Gzip and upload a specific log file
 void process_log(char *fname, char *fname_withpath) {
+  char tmp[TMP_BUFSIZE];
+  memset(tmp, 0, TMP_BUFSIZE);
+
   char transfer_fname[PATHSIZE], transfer_fname_withpath[PATHSIZE];
   memset(transfer_fname, 0, PATHSIZE);
   memset(transfer_fname_withpath, 0, PATHSIZE);
@@ -223,8 +226,11 @@ void process_log(char *fname, char *fname_withpath) {
 	return;
       }
 
-      sprintf(transfer_fname_withpath, "%s.gz", transfer_fname_withpath);
-      sprintf(transfer_fname, "%s.gz", transfer_fname);
+      sprintf(tmp, "%s.gz", transfer_fname_withpath);
+      strncpy(transfer_fname_withpath, tmp, PATHSIZE);
+
+      sprintf(tmp, "%s.gz", transfer_fname);
+      strncpy(transfer_fname, tmp, PATHSIZE);
     }
 
     if (upload_to[0]) {
@@ -270,7 +276,12 @@ void process_old() {
 	memset(name, 0, PATHSIZE);
 	memset(fullname, 0, PATHSIZE);
 	strcpy(name, dir->d_name);
- 	sprintf(fullname, "%s/%s", logdir, name);	
+
+        char tmp[TMP_BUFSIZE];
+        memset(tmp, 0, TMP_BUFSIZE);
+   
+ 	sprintf(tmp, "%s/%s", logdir, name);	
+	strncpy(fullname, tmp, PATHSIZE);
 
 	struct stat sb;
 	if (stat(fullname, &sb) != -1) {
@@ -295,7 +306,11 @@ void purge_old() {
   char donedir[PATHSIZE];
   memset(donedir, 0, PATHSIZE);
 
-  sprintf(donedir, "%s/done", logdir);
+  char tmp[TMP_BUFSIZE];
+  memset(tmp, 0, TMP_BUFSIZE);
+
+  sprintf(tmp, "%s/done", logdir);
+  strncpy(donedir, tmp, PATHSIZE);
 
   d = opendir(donedir);
 
@@ -306,7 +321,9 @@ void purge_old() {
         memset(name, 0, PATHSIZE);
         memset(fullname, 0, PATHSIZE);
         strcpy(name, dir->d_name);
-        sprintf(fullname, "%s/%s", donedir, name);
+
+        sprintf(tmp, "%s/%s", donedir, name);
+        strncpy(fullname, tmp, PATHSIZE);
 
         struct stat sb;
         if (stat(fullname, &sb) != -1) {
@@ -352,7 +369,7 @@ void usage(char *bin) {
          bin);
   printf("\n");
   printf("--upload-to boatid          Upload logs to the cloud.\n");
-  printf("--purge-done days           Delete uploaded log files at least 'days' old\n");
+  /* printf("--purge-done days           Delete uploaded log files at least 'days' old\n"); */
   printf("                            that havee been successfully uploaded.\n");
   printf("--retry minutes             Retry processing logs older than 'minutes'.\n");
   printf("DIRECTORY                   Directory to store the logs.\n");

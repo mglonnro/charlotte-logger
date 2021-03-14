@@ -3,12 +3,14 @@ TARGETDIR=.
 TARGETS=$(TARGET)
 TARGET=charlotte-logger
 OBJS=charlotte-logger.o fileupload.o hash.o
-LDFLAGS=-lcurl -lcrypto
-CFLAGS=-g
+STATICLIBS=/usr/local/lib/libcurl.a
+LDFLAGS=-lz -lssl -lcrypto -lpthread
+CFLAGS=-g -Wall
+VER=0.0.5
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LDLIBS$(LDLIBS-$(@)))
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $(TARGET) $(OBJS) $(STATICLIBS)
 
 charlotte-logger.o:	charlotte-logger.c
 			$(CC) $(CFLAGS) -c charlotte-logger.c
