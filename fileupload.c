@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#define SERVER "https://community.nakedsailor.blog/timescaledb"
+#define SERVER "https://community.nakedsailor.blog/api.beta"
 // #define SERVER "http://localhost:3100"
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb,
