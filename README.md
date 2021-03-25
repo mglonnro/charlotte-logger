@@ -1,4 +1,4 @@
-# Charlotte - your digital crew member
+# Charlotte
 
 [<img width="400" alt="Mapbox" src="https://storage.googleapis.com/charlotte-public/og_image_default.png">](https://beta.charlotte.lc/)
 
@@ -96,3 +96,4 @@ https://www.yachtd.com/products/usb_gateway.html
 5. A suitable NMEA2000 Micro-C cable to connect the USB-NMEA gateway to your boat's network. 
 6. A Wifi/internet access point that the Raspberry can connect to a. (I am using a Huawei E5577S that I can plug into my boat's USB charging socket for constant power and 24/7 data collection: https://consumer.huawei.com/sg/support/routers/e5577s/.)
 
+![Hardware Example](https://storage.googleapis.com/charlotte-public/hw_model.png)
