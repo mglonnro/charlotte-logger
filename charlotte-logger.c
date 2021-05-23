@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <dirent.h> 
 #include <fcntl.h>
+#include <errno.h>
 
 #include "fileupload.h"
 
@@ -167,7 +168,7 @@ int main(int argc, char **argv) {
 	}
       }
 
-      sprintf(fname, "%s-%d%02d%02d-%02d%02d%02d.%s", "nmealog",
+      sprintf(fname, "%s-%d%02d%02d-%02d%02d%02d.%s", "nmealog", 
               tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour,
               tm.tm_min, tm.tm_sec, (json_flag == 1 ? "json.log" : "log") );
       sprintf(tmp, "%s/%s", logdir, fname);
@@ -333,6 +334,9 @@ void purge_old() {
           // Improve this with locks
           if ( (now - sb.st_mtime) > (purge_days * 24L * 3600L)) {
 	    printf("Purging %s\n", fullname);
+	    if (unlink(fullname) == -1) {
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+	    }
           }
         }
       }
@@ -364,7 +368,7 @@ housekeeper() {
 }
 
 void usage(char *bin) {
-  printf("charlotte-logger v0.0.5\n");
+  printf("charlotte-logger v0.0.6\n");
   printf("usage: %s [--upload-to boatid] [--purge-done days] [--retry minutes] DIRECTORY\n",
          bin);
   printf("\n");
